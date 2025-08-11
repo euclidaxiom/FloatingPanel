@@ -14,13 +14,13 @@ public class FloatingPanelController {
     /// Initialize a new floating panel controller
     /// - Parameters:
     ///   - rootView: The SwiftUI view to display in the panel
-    ///   - size: The initial size of the panel
-    ///   - position: The position where the panel should appear
+    ///   - size: The size configuration for the panel
+    ///   - position: The position configuration for the panel
     ///   - material: The visual effect material to use for the panel background
     public init<V: View>(
         rootView: V, 
-        size: FloatingPanel.PanelSize = .compact, 
-        position: FloatingPanel.Position = .center,
+        size: FloatingPanelSize = DefaultPanelSize(),
+        position: FloatingPanelPosition = DefaultPanelPosition(),
         material: NSVisualEffectView.Material = .underWindowBackground
     ) {
         // Apply the floating panel style automatically
@@ -84,7 +84,7 @@ public class FloatingPanelController {
     /// - Parameters:
     ///   - size: The target size
     ///   - animated: Whether to animate the resize
-    public func resizeTo(_ size: FloatingPanel.PanelSize, animated: Bool = true) {
+    public func resizeTo(_ size: CGSize, animated: Bool = true) {
         guard isVisible else { return }
         
         floatingPanel?.resizeTo(size, animated: animated)
@@ -106,8 +106,14 @@ public class FloatingPanelController {
     
     /// Get the current size of the panel
     /// - Returns: The current panel size
-    public func getCurrentSize() -> FloatingPanel.PanelSize? {
+    public func getCurrentSize() -> CGSize? {
         return floatingPanel?.getCurrentSize()
+    }
+    
+    /// Check if the panel is currently in compact size
+    /// - Returns: True if the panel is in compact size, false otherwise
+    public func isCompact() -> Bool? {
+        return floatingPanel?.isCompact()
     }
     
     /// Check if the panel is currently visible

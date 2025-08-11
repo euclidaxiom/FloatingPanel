@@ -10,8 +10,6 @@ public extension View {
     func floatingPanelBackground(material: NSVisualEffectView.Material = .underWindowBackground) -> some View {
         self.background(VisualEffectView(material: material))
     }
-    
-
 }
 
 /// Predefined content views for common floating panel use cases
@@ -77,5 +75,83 @@ public struct FloatingPanelContent {
             }
             .padding()
         }
+    }
+}
+
+// MARK: - Example Position Configurations
+
+/// Position configuration for top-right corner placement
+public struct TopRightPosition: FloatingPanelPosition {
+    public init() {}
+    
+    public func calculatePosition(for panelSize: CGSize) -> CGPoint {
+        guard let screen = NSScreen.main else { return .zero }
+        
+        let screenFrame = screen.visibleFrame
+        
+        return CGPoint(
+            x: screenFrame.maxX - panelSize.width - 20,
+            y: screenFrame.maxY - panelSize.height - 20
+        )
+    }
+}
+
+/// Position configuration for bottom-left corner placement
+public struct BottomLeftPosition: FloatingPanelPosition {
+    public init() {}
+    
+    public func calculatePosition(for panelSize: CGSize) -> CGPoint {
+        guard let screen = NSScreen.main else { return .zero }
+        
+        let screenFrame = screen.visibleFrame
+        
+        return CGPoint(
+            x: screenFrame.minX + 20,
+            y: screenFrame.minY + 20
+        )
+    }
+}
+
+/// Position configuration for custom coordinates
+public struct CustomPosition: FloatingPanelPosition {
+    private let x: CGFloat
+    private let y: CGFloat
+    
+    public init(x: CGFloat, y: CGFloat) {
+        self.x = x
+        self.y = y
+    }
+    
+    public func calculatePosition(for panelSize: CGSize) -> CGPoint {
+        return CGPoint(x: x, y: y)
+    }
+}
+
+// MARK: - Example Size Configurations
+
+/// Size configuration for a wide panel
+public struct WidePanelSize: FloatingPanelSize {
+    public let compact: CGSize = CGSize(width: 400, height: 150)
+    public let expanded: CGSize = CGSize(width: 400, height: 400)
+    
+    public init() {}
+}
+
+/// Size configuration for a tall panel
+public struct TallPanelSize: FloatingPanelSize {
+    public let compact: CGSize = CGSize(width: 200, height: 300)
+    public let expanded: CGSize = CGSize(width: 200, height: 600)
+    
+    public init() {}
+}
+
+/// Size configuration for custom dimensions
+public struct CustomPanelSize: FloatingPanelSize {
+    public let compact: CGSize
+    public let expanded: CGSize
+    
+    public init(compact: CGSize, expanded: CGSize) {
+        self.compact = compact
+        self.expanded = expanded
     }
 }

@@ -1,62 +1,62 @@
 import AppKit
 import SwiftUI
 
+/// Protocol for defining panel positions
+public protocol FloatingPanelPosition {
+    func calculatePosition(for panelSize: CGSize) -> CGPoint
+}
+
+/// Protocol for defining panel sizes
+public protocol FloatingPanelSize {
+    var compact: CGSize { get }
+    var expanded: CGSize { get }
+}
+
+/// Default panel position configuration
+public struct DefaultPanelPosition: FloatingPanelPosition {
+    public init() {}
+    
+    public func calculatePosition(for panelSize: CGSize) -> CGPoint {
+        guard let screen = NSScreen.main else { return .zero }
+        
+        let screenFrame = screen.visibleFrame
+        
+        return CGPoint(
+            x: screenFrame.midX - panelSize.width / 2,
+            y: screenFrame.midY - panelSize.height / 2
+        )
+    }
+}
+
+/// Default panel size configuration
+public struct DefaultPanelSize: FloatingPanelSize {
+    public let compact: CGSize = CGSize(width: 284, height: 200)
+    public let expanded: CGSize = CGSize(width: 284, height: 600)
+    
+    public init() {}
+}
+
 /// A reusable floating panel for macOS applications
 @MainActor
 public class FloatingPanel: NSPanel {
     
-    /// Available positions for the floating panel
-    public enum Position: Sendable {
-        case center
-        case topLeft
-        case topRight
-        case bottomLeft
-        case bottomRight
-        case custom(x: CGFloat, y: CGFloat)
-    }
-    
-    /// Available sizes for the floating panel
-    public enum PanelSize: Equatable, Sendable {
-        case compact
-        case expanded
-        case custom(width: CGFloat, height: CGFloat)
-        
-        var size: CGSize {
-            switch self {
-            case .compact:
-                return CGSize(width: 284, height: 200)
-            case .expanded:
-                return CGSize(width: 284, height: 600)
-            case .custom(let width, let height):
-                return CGSize(width: width, height: height)
-            }
-        }
-        
-        public static func == (lhs: PanelSize, rhs: PanelSize) -> Bool {
-            switch (lhs, rhs) {
-            case (.compact, .compact):
-                return true
-            case (.expanded, .expanded):
-                return true
-            case (.custom(let lhsWidth, let lhsHeight), .custom(let rhsWidth, let rhsHeight)):
-                return lhsWidth == rhsWidth && lhsHeight == rhsHeight
-            default:
-                return false
-            }
-        }
-    }
-    
-    private let panelPosition: Position
-    private var currentSize: PanelSize = .compact
+    private let panelPosition: FloatingPanelPosition
+    private let panelSize: FloatingPanelSize
+    private var currentSize: CGSize
     
     /// Initialize a new floating panel with a SwiftUI view
     /// - Parameters:
     ///   - rootView: The SwiftUI view to display in the panel
-    ///   - size: The initial size of the panel
-    ///   - position: The position where the panel should appear
-    public init<V: View>(rootView: V, size: PanelSize = .compact, position: Position = .center) {
+    ///   - size: The size configuration for the panel
+    ///   - position: The position configuration for the panel
+    public init<V: View>(
+        rootView: V, 
+        size: FloatingPanelSize = DefaultPanelSize(),
+        position: FloatingPanelPosition = DefaultPanelPosition()
+    ) {
         self.panelPosition = position
-        self.currentSize = size
+        self.panelSize = size
+        self.currentSize = size.compact
         
         super.init(
             contentRect: .zero,
@@ -65,7 +65,7 @@ public class FloatingPanel: NSPanel {
             defer: true
         )
         
-        setContentSize(size.size)
+        setContentSize(currentSize)
         
         configurePanel()
         addContentView(rootView: rootView)
@@ -90,43 +90,15 @@ public class FloatingPanel: NSPanel {
         contentView = NSHostingView(rootView: rootView)
     }
     
-    /// Position the panel on screen based on the specified position
+    /// Position the panel on screen based on the position configuration
     public func positionPanel() {
-        guard let screen = NSScreen.main else { return }
-        
-        let screenFrame = screen.visibleFrame
-        let panelSize = frame.size
-        
-        let xPosition: CGFloat
-        let yPosition: CGFloat
-        
-        switch panelPosition {
-        case .center:
-            xPosition = screenFrame.midX - panelSize.width / 2
-            yPosition = screenFrame.midY - panelSize.height / 2
-        case .topLeft:
-            xPosition = screenFrame.minX + 20
-            yPosition = screenFrame.maxY - panelSize.height - 20
-        case .topRight:
-            xPosition = screenFrame.maxX - panelSize.width - 20
-            yPosition = screenFrame.maxY - panelSize.height - 20
-        case .bottomLeft:
-            xPosition = screenFrame.minX + 20
-            yPosition = screenFrame.minY + 20
-        case .bottomRight:
-            xPosition = screenFrame.maxX - panelSize.width - 20
-            yPosition = screenFrame.minY + 20
-        case .custom(let x, let y):
-            xPosition = x
-            yPosition = y
-        }
-        
-        setFrameOrigin(NSPoint(x: xPosition, y: yPosition))
+        let position = panelPosition.calculatePosition(for: frame.size)
+        setFrameOrigin(position)
     }
     
     /// Toggle between compact and expanded sizes
     public func toggleSize() {
-        let newSize: PanelSize = currentSize == .compact ? .expanded : .compact
+        let newSize = currentSize == panelSize.compact ? panelSize.expanded : panelSize.compact
         resizeTo(newSize, animated: true)
     }
     
@@ -134,16 +106,15 @@ public class FloatingPanel: NSPanel {
     /// - Parameters:
     ///   - size: The target size
     ///   - animated: Whether to animate the resize
-    public func resizeTo(_ size: PanelSize, animated: Bool = true) {
+    public func resizeTo(_ size: CGSize, animated: Bool = true) {
         guard currentSize != size else { return }
         
-        let newSize = size.size
         let currentFrame = frame
         let newFrame = NSRect(
-            x: currentFrame.origin.x - (newSize.width - currentFrame.width) / 2,
-            y: currentFrame.origin.y - (newSize.height - currentFrame.height) / 2,
-            width: newSize.width,
-            height: newSize.height
+            x: currentFrame.origin.x - (size.width - currentFrame.width) / 2,
+            y: currentFrame.origin.y - (size.height - currentFrame.height) / 2,
+            width: size.width,
+            height: size.height
         )
         
         if animated {
@@ -154,20 +125,26 @@ public class FloatingPanel: NSPanel {
             }, completionHandler: { [weak self] in
                 Task { @MainActor in
                     self?.currentSize = size
-                    self?.setContentSize(newSize)
+                    self?.setContentSize(size)
                 }
             })
         } else {
             setFrame(newFrame, display: true)
-            setContentSize(newSize)
+            setContentSize(size)
             currentSize = size
         }
     }
     
     /// Get the current size of the panel
     /// - Returns: The current panel size
-    public func getCurrentSize() -> PanelSize {
+    public func getCurrentSize() -> CGSize {
         return currentSize
+    }
+    
+    /// Check if the panel is currently in compact size
+    /// - Returns: True if the panel is in compact size, false otherwise
+    public func isCompact() -> Bool {
+        return currentSize == panelSize.compact
     }
     
     /// Update the content view of the panel
