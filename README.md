@@ -11,6 +11,7 @@ A reusable floating panel library for macOS applications built with SwiftUI.
 - 📍 Flexible positioning (center, corners, custom)
 - 🎭 Smooth animations
 - 🔄 Easy content updates
+- ✨ Automatic styling - no need to remember modifiers
 
 ## Installation
 
@@ -46,7 +47,6 @@ struct ContentView: View {
     
     private func setupPanel() {
         let contentView = Text("Hello, Floating Panel!")
-            .floatingPanelStyle()
         
         panelController = FloatingPanelController(
             rootView: contentView,
@@ -64,6 +64,26 @@ struct ContentView: View {
 }
 ```
 
+### Automatic Styling
+
+The library automatically applies the floating panel styling to your content, so you don't need to remember to use modifiers. The styling includes:
+
+- Full-width and height layout
+- Native macOS visual effects
+- Proper safe area handling
+
+```swift
+// No need to remember modifiers anymore!
+let content = Text("Hello, World!")
+let controller = FloatingPanelController(rootView: content)
+
+// Custom material is still supported
+let controller = FloatingPanelController(
+    rootView: content,
+    material: .popover
+)
+```
+
 ### Using Pre-built Content Views
 
 ```swift
@@ -77,6 +97,12 @@ let loadingContent = FloatingPanelContent.LoadingContent("Processing...")
 let errorContent = FloatingPanelContent.ErrorContent("Something went wrong")
 
 let panelController = FloatingPanelController(rootView: textContent)
+
+// You can also customize the material for pre-built content
+let panelController = FloatingPanelController(
+    rootView: errorContent,
+    material: .hudWindow
+)
 ```
 
 ### Custom Content with Visual Effects
@@ -98,9 +124,14 @@ struct CustomPanelContent: View {
             .buttonStyle(.borderedProminent)
         }
         .padding()
-        .floatingPanelStyle(material: .popover)
     }
 }
+
+// Usage with custom material
+let panelController = FloatingPanelController(
+    rootView: CustomPanelContent(),
+    material: .popover
+)
 ```
 
 ## API Reference
@@ -115,7 +146,8 @@ The main panel class that creates floating windows.
 init<V: View>(
     rootView: V,
     size: PanelSize = .compact,
-    position: Position = .center
+    position: Position = .center,
+    material: NSVisualEffectView.Material = .underWindowBackground
 )
 ```
 
@@ -160,7 +192,8 @@ A controller that manages panel visibility and hotkeys.
 init<V: View>(
     rootView: V,
     size: FloatingPanel.PanelSize = .compact,
-    position: FloatingPanel.Position = .center
+    position: FloatingPanel.Position = .center,
+    material: NSVisualEffectView.Material = .underWindowBackground
 )
 ```
 
@@ -172,10 +205,12 @@ init<V: View>(
 - `togglePanel()` - Toggle panel visibility
 - `togglePanelSize()` - Toggle panel size
 - `resizeTo(_:animated:)` - Resize the panel
-- `updateContentView(_:)` - Update panel content
+- `updateContentView(_:material:)` - Update panel content with optional material
 - `isPanelVisible()` - Check if panel is visible
 
 ### View Extensions
+
+> **Note**: The floating panel styling is now applied automatically when creating a `FloatingPanelController`. These extensions are still available for manual use if needed.
 
 #### floatingPanelBackground
 
@@ -211,7 +246,6 @@ struct NotificationPanel: View {
                 .font(.body)
         }
         .padding()
-        .floatingPanelStyle(material: .hudWindow)
     }
 }
 
@@ -220,7 +254,8 @@ let notification = NotificationPanel(message: "New message received!")
 let controller = FloatingPanelController(
     rootView: notification,
     size: .custom(width: 300, height: 60),
-    position: .topRight
+    position: .topRight,
+    material: .hudWindow
 )
 ```
 
@@ -238,7 +273,6 @@ struct QuickActionsPanel: View {
             Button("Cut") { /* action */ }
         }
         .padding()
-        .floatingPanelStyle()
     }
 }
 ```

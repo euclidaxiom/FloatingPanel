@@ -6,7 +6,7 @@ import SwiftUI
 public class FloatingPanel: NSPanel {
     
     /// Available positions for the floating panel
-    public enum Position {
+    public enum Position: Sendable {
         case center
         case topLeft
         case topRight
@@ -16,7 +16,7 @@ public class FloatingPanel: NSPanel {
     }
     
     /// Available sizes for the floating panel
-    public enum PanelSize: Equatable {
+    public enum PanelSize: Equatable, Sendable {
         case compact
         case expanded
         case custom(width: CGFloat, height: CGFloat)
@@ -151,10 +151,12 @@ public class FloatingPanel: NSPanel {
                 context.duration = 0.3
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 animator().setFrame(newFrame, display: true)
-            }) {
-                self.currentSize = size
-                self.setContentSize(newSize)
-            }
+            }, completionHandler: { [weak self] in
+                Task { @MainActor in
+                    self?.currentSize = size
+                    self?.setContentSize(newSize)
+                }
+            })
         } else {
             setFrame(newFrame, display: true)
             setContentSize(newSize)

@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import VisualEffectView
 @preconcurrency import HotKey
 
 /// A controller for managing floating panels with hotkey support
@@ -15,8 +16,20 @@ public class FloatingPanelController {
     ///   - rootView: The SwiftUI view to display in the panel
     ///   - size: The initial size of the panel
     ///   - position: The position where the panel should appear
-    public init<V: View>(rootView: V, size: FloatingPanel.PanelSize = .compact, position: FloatingPanel.Position = .center) {
-        floatingPanel = FloatingPanel(rootView: rootView, size: size, position: position)
+    ///   - material: The visual effect material to use for the panel background
+    public init<V: View>(
+        rootView: V, 
+        size: FloatingPanel.PanelSize = .compact, 
+        position: FloatingPanel.Position = .center,
+        material: NSVisualEffectView.Material = .underWindowBackground
+    ) {
+        // Apply the floating panel style automatically
+        let styledView = AnyView(rootView)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(VisualEffectView(material: material))
+            .ignoresSafeArea()
+        
+        floatingPanel = FloatingPanel(rootView: styledView, size: size, position: position)
     }
     
     /// Setup a hotkey to show/hide the panel
@@ -78,9 +91,17 @@ public class FloatingPanelController {
     }
     
     /// Update the content view of the panel
-    /// - Parameter rootView: The new SwiftUI view to display
-    public func updateContentView<V: View>(_ rootView: V) {
-        floatingPanel?.updateContentView(rootView)
+    /// - Parameters:
+    ///   - rootView: The new SwiftUI view to display
+    ///   - material: The visual effect material to use for the panel background
+    public func updateContentView<V: View>(_ rootView: V, material: NSVisualEffectView.Material = .underWindowBackground) {
+        // Apply the floating panel style automatically
+        let styledView = AnyView(rootView)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(VisualEffectView(material: material))
+            .ignoresSafeArea()
+        
+        floatingPanel?.updateContentView(styledView)
     }
     
     /// Get the current size of the panel

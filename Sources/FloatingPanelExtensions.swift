@@ -41,7 +41,6 @@ public struct FloatingPanelContent {
                     .foregroundStyle(.secondary)
                     .padding()
             }
-            .floatingPanelStyle(material: material)
         }
     }
     
@@ -62,7 +61,6 @@ public struct FloatingPanelContent {
                 Text(message)
                     .foregroundStyle(.secondary)
             }
-            .floatingPanelStyle(material: material)
         }
     }
     
@@ -86,7 +84,6 @@ public struct FloatingPanelContent {
                     .multilineTextAlignment(.center)
             }
             .padding()
-            .floatingPanelStyle(material: material)
         }
     }
 }
