@@ -210,8 +210,6 @@ init<V: View>(
 
 ### View Extensions
 
-> **Note**: The floating panel styling is now applied automatically when creating a `FloatingPanelController`. These extensions are still available for manual use if needed.
-
 #### floatingPanelBackground
 
 Apply a visual effect background to any view:
@@ -219,15 +217,6 @@ Apply a visual effect background to any view:
 ```swift
 Text("Hello")
     .floatingPanelBackground(material: .popover)
-```
-
-#### floatingPanelStyle
-
-Apply complete floating panel styling:
-
-```swift
-Text("Hello")
-    .floatingPanelStyle(material: .underWindowBackground)
 ```
 
 ## Examples

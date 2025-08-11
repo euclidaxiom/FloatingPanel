@@ -11,15 +11,7 @@ public extension View {
         self.background(VisualEffectView(material: material))
     }
     
-    /// Make the view suitable for use in a floating panel
-    /// - Parameter material: The visual effect material to use
-    /// - Returns: A view configured for floating panel use
-    func floatingPanelStyle(material: NSVisualEffectView.Material = .underWindowBackground) -> some View {
-        self
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .floatingPanelBackground(material: material)
-            .ignoresSafeArea()
-    }
+
 }
 
 /// Predefined content views for common floating panel use cases
