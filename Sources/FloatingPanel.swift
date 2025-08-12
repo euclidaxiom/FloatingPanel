@@ -1,34 +1,47 @@
 import AppKit
 import SwiftUI
 
-/// Protocol for defining panel positions
+// MARK: - Protocols
+
+/// A protocol that defines the position of the floating panel on the screen.
+///
+/// Conform to this protocol to create custom positioning logic for the panel.
 public protocol FloatingPanelPosition {
+    /// Calculates the origin point for the panel based on its size.
+    /// - Parameter panelSize: The size of the panel's frame.
+    /// - Returns: The `CGPoint` where the panel's top-left corner should be.
     func calculatePosition(for panelSize: CGSize) -> CGPoint
 }
 
-/// Protocol for defining panel sizes
+/// A protocol that defines the compact and expanded sizes of the floating panel.
+///
+/// Conform to this protocol to specify custom dimensions for the panel's two states.
 public protocol FloatingPanelSize {
+    /// The smaller, default size of the panel.
     var compact: CGSize { get }
+    /// The larger size of the panel, used when expanded.
     var expanded: CGSize { get }
 }
 
-/// Default panel position configuration
+// MARK: - Default Implementations
+
+/// The default position for the panel, centering it horizontally near the top of the screen.
 public struct DefaultPanelPosition: FloatingPanelPosition {
     public init() {}
     
     public func calculatePosition(for panelSize: CGSize) -> CGPoint {
         guard let screen = NSScreen.main else { return .zero }
-        
         let screenFrame = screen.visibleFrame
         
+        // Center horizontally, place 210 points from the top.
         return CGPoint(
             x: screenFrame.midX - panelSize.width / 2,
-            y: CGFloat(210)
+            y: screenFrame.maxY - 210
         )
     }
 }
 
-/// Default panel size configuration
+/// The default compact and expanded sizes for the panel.
 public struct DefaultPanelSize: FloatingPanelSize {
     public let compact: CGSize = CGSize(width: 600, height: 64)
     public let expanded: CGSize = CGSize(width: 600, height: 431)
@@ -36,7 +49,11 @@ public struct DefaultPanelSize: FloatingPanelSize {
     public init() {}
 }
 
-/// A reusable floating panel for macOS applications
+// MARK: - FloatingPanel
+
+/// A custom `NSPanel` subclass that hosts a SwiftUI view and provides floating behavior.
+///
+/// This panel is the core windowing component of the library. It is typically managed by a `FloatingPanelController`.
 @MainActor
 public class FloatingPanel: NSPanel {
     
@@ -44,13 +61,13 @@ public class FloatingPanel: NSPanel {
     private let panelSize: FloatingPanelSize
     private var currentSize: CGSize
     
-    /// Initialize a new floating panel with a SwiftUI view
+    /// Initializes and configures the floating panel.
     /// - Parameters:
-    ///   - rootView: The SwiftUI view to display in the panel
-    ///   - size: The size configuration for the panel
-    ///   - position: The position configuration for the panel
+    ///   - rootView: The root SwiftUI view to be displayed inside the panel.
+    ///   - size: A `FloatingPanelSize` conforming object that defines the panel's dimensions.
+    ///   - position: A `FloatingPanelPosition` conforming object that defines the panel's on-screen location.
     public init<V: View>(
-        rootView: V, 
+        rootView: V,
         size: FloatingPanelSize = DefaultPanelSize(),
         position: FloatingPanelPosition = DefaultPanelPosition()
     ) {
@@ -80,39 +97,37 @@ public class FloatingPanel: NSPanel {
         titlebarAppearsTransparent = true
         titleVisibility = .hidden
         
-        collectionBehavior = [
-            .canJoinAllSpaces,
-            .stationary
-        ]
+        // Allows the panel to be visible on all spaces.
+        collectionBehavior = [.canJoinAllSpaces, .stationary]
     }
     
     private func addContentView<V: View>(rootView: V) {
         contentView = NSHostingView(rootView: rootView)
     }
     
-    /// Position the panel on screen based on the position configuration
+    /// Calculates and sets the panel's position on the screen.
     public func positionPanel() {
         let position = panelPosition.calculatePosition(for: frame.size)
         setFrameOrigin(position)
     }
     
-    /// Toggle between compact and expanded sizes
+    /// Animates a transition between the compact and expanded sizes.
     public func toggleSize() {
         let newSize = currentSize == panelSize.compact ? panelSize.expanded : panelSize.compact
         resizeTo(newSize, animated: true)
     }
     
-    /// Resize the panel to a specific size
+    /// Resizes the panel to a specific size, with an optional animation.
     /// - Parameters:
-    ///   - size: The target size
-    ///   - animated: Whether to animate the resize
+    ///   - size: The target `CGSize` for the panel.
+    ///   - animated: If `true`, the resize will be animated. Defaults to `true`.
     public func resizeTo(_ size: CGSize, animated: Bool = true) {
         guard currentSize != size else { return }
         
         let currentFrame = frame
         let newFrame = NSRect(
             x: currentFrame.origin.x - (size.width - currentFrame.width) / 2,
-            y: currentFrame.origin.y - (size.height - currentFrame.height) / 2,
+            y: currentFrame.origin.y - (size.height - currentFrame.height), // Anchor resize to the top
             width: size.width,
             height: size.height
         )
@@ -135,20 +150,18 @@ public class FloatingPanel: NSPanel {
         }
     }
     
-    /// Get the current size of the panel
-    /// - Returns: The current panel size
+    /// Returns the current size of the panel.
     public func getCurrentSize() -> CGSize {
         return currentSize
     }
     
-    /// Check if the panel is currently in compact size
-    /// - Returns: True if the panel is in compact size, false otherwise
+    /// Checks if the panel is currently at its compact size.
     public func isCompact() -> Bool {
         return currentSize == panelSize.compact
     }
     
-    /// Update the content view of the panel
-    /// - Parameter rootView: The new SwiftUI view to display
+    /// Replaces the panel's content with a new SwiftUI view.
+    /// - Parameter rootView: The new SwiftUI view to display.
     public func updateContentView<V: View>(_ rootView: V) {
         contentView = NSHostingView(rootView: rootView)
     }

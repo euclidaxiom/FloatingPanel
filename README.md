@@ -1,343 +1,162 @@
 # FloatingPanel
 
-A reusable floating panel library for macOS applications built with SwiftUI.
+A lightweight Swift package for creating reusable, protocol-driven floating panels in macOS applications.
 
-## Features
+This package is designed for building accessory-style applications (e.g., menu bar apps) where the panel is the primary interface, running without a Dock icon.
 
-- 🪟 Floating panels that stay on top of other windows
-- ⌨️ Hotkey support for showing/hiding panels
-- 🎨 Visual effects with native macOS materials
-- 📏 Protocol-based size configuration (compact + expanded)
-- 📍 Protocol-based position configuration
-- 🎭 Smooth animations
-- 🔄 Easy content updates
-- ✨ Automatic styling - no need to remember modifiers
-- 🔧 Extensible architecture with protocols
+## Core Concepts
 
-## Installation
+The library is built around two main components:
 
-Add this package to your Xcode project:
+1.  `FloatingPanel`: An `NSPanel` subclass that hosts your SwiftUI content. It manages the window's appearance, behavior, and animations.
+2.  `FloatingPanelController`: The main entry point for using the library. It manages the panel's lifecycle, visibility, hotkey registration, and content updates.
+
+Customization is handled through two simple protocols:
+
+-   `FloatingPanelPosition`: Defines *where* the panel appears on the screen.
+-   `FloatingPanelSize`: Defines the panel's `compact` and `expanded` dimensions.
+
+## Application Setup
+
+Since this package is intended for accessory applications, you'll need to configure your app to run without a main window or Dock icon.
+
+### 1. Configure Info.plist
+
+To hide the app's Dock icon and make it a background agent, add the following key-value pair to your project's `Info.plist` file:
+
+**Key:** `Application is agent (UIElement)`
+**Value:** `YES`
+
+### 2. Use an AppDelegate
+
+Instead of the standard SwiftUI `App` lifecycle with a `WindowGroup`, you'll use an `AppDelegate` to control the application and set up the panel.
 
 ```swift
-dependencies: [
-    .package(url: "path/to/FloatingPanel", from: "1.0.0")
-]
+import SwiftUI
+
+@main
+struct YourApp: App {
+    // Set the app delegate.
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    var body: some Scene {
+        // An empty scene is used because the panel is managed by the controller.
+        Settings {
+            EmptyView()
+        }
+    }
+}
 ```
 
 ## Quick Start
 
-### Basic Usage
+In your `AppDelegate`, create and hold a reference to the `FloatingPanelController`.
 
 ```swift
 import SwiftUI
 import FloatingPanel
 
-struct ContentView: View {
-    @State private var panelController: FloatingPanelController?
-    
-    var body: some View {
-        VStack {
-            Button("Show Panel") {
-                showPanel()
-            }
-        }
-        .onAppear {
-            setupPanel()
-        }
-    }
-    
-    private func setupPanel() {
-        let contentView = Text("Hello, Floating Panel!")
+class AppDelegate: NSObject, NSApplicationDelegate {
+    // Hold the controller in a property to keep the panel alive.
+    private var panelController: FloatingPanelController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // 1. Create the view for the panel's content.
+        let contentView = ContentView()
         
-        panelController = FloatingPanelController(
-            rootView: contentView
-        )
+        // 2. Initialize the controller.
+        panelController = FloatingPanelController(rootView: contentView)
         
-        // Setup hotkey (Cmd+Shift+Space)
-        panelController?.setupHotkey(key: .space, modifiers: [.command, .shift])
-    }
-    
-    private func showPanel() {
-        panelController?.showPanel()
+        // 3. Set up a global hotkey to toggle the panel.
+        panelController?.setupHotkey(key: .space, modifiers: [.command, .option])
     }
 }
 ```
 
-### Automatic Styling
+## Customization
 
-The library automatically applies the floating panel styling to your content, so you don't need to remember to use modifiers. The styling includes:
+### Custom Size & Position
 
-- Full-width and height layout
-- Native macOS visual effects
-- Proper safe area handling
+Create your own structs conforming to `FloatingPanelSize` and `FloatingPanelPosition` to customize the panel's dimensions and location.
 
 ```swift
-// No need to remember modifiers anymore!
-let content = Text("Hello, World!")
-let controller = FloatingPanelController(rootView: content)
-
-// Custom material is still supported
-let controller = FloatingPanelController(
-    rootView: content,
-    material: .popover
-)
-```
-
-### Using Pre-built Content Views
-
-```swift
-// Text content
-let textContent = FloatingPanelContent.TextContent("Your message here")
-
-// Loading content
-let loadingContent = FloatingPanelContent.LoadingContent("Processing...")
-
-// Error content
-let errorContent = FloatingPanelContent.ErrorContent("Something went wrong")
-
-let panelController = FloatingPanelController(rootView: textContent)
-
-// You can also customize the material for pre-built content
-let panelController = FloatingPanelController(
-    rootView: errorContent,
-    material: .hudWindow
-)
-```
-
-### Custom Position and Size Configurations
-
-The library uses protocols for maximum flexibility. You can create custom configurations or use the provided ones:
-
-```swift
-// Using built-in configurations
-let controller = FloatingPanelController(
-    rootView: content,
-    size: WidePanelSize(),        // 400x150 → 400x400
-    position: TopRightPosition()  // Top-right corner
-)
-
-// Custom size configuration
-struct MyPanelSize: FloatingPanelSize {
-    let compact: CGSize = CGSize(width: 300, height: 100)
-    let expanded: CGSize = CGSize(width: 300, height: 500)
+// A custom size configuration.
+struct PanelSize: FloatingPanelSize {
+    let compact: CGSize = CGSize(width: 344, height: 57)
+    let expanded: CGSize = CGSize(width: 344, height: 344)
 }
 
-// Custom position configuration
-struct MyPanelPosition: FloatingPanelPosition {
+// A custom position configuration (top-right corner).
+struct TopRightCorner: FloatingPanelPosition {
     func calculatePosition(for panelSize: CGSize) -> CGPoint {
-        // Your custom positioning logic
-        return CGPoint(x: 100, y: 100)
+        guard let screen = NSScreen.main else { return .zero }
+        let screenFrame = screen.visibleFrame
+        
+        return CGPoint(
+            x: screenFrame.maxX - panelSize.width - 20, // 20pts padding
+            y: screenFrame.maxY - panelSize.height - 20
+        )
     }
 }
 
-let controller = FloatingPanelController(
-    rootView: content,
-    size: MyPanelSize(),
-    position: MyPanelPosition()
+// Initialize the controller with your custom configurations.
+panelController = FloatingPanelController(
+    rootView: MyContentView(),
+    size: WidePanel(),
+    position: TopRightCorner()
 )
 ```
 
-### Custom Content with Visual Effects
+### Custom Background Visual Effect
+
+You can customize the background material of the panel by providing a `VisualEffectConfiguration`. This is useful for matching the panel's appearance to your app's design.
 
 ```swift
-struct CustomPanelContent: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "star.fill")
-                .font(.title)
-                .foregroundStyle(.yellow)
-            
-            Text("Custom Panel")
-                .font(.headline)
-            
-            Button("Action") {
-                // Your action here
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
-    }
+import VisualEffectView
+
+// A custom visual effect configuration.
+struct PopoverWindowEffect: VisualEffectConfiguration {
+    let material: NSVisualEffectView.Material = .popover
+    let blendingMode: NSVisualEffectView.BlendingMode = .withinWindow
+    let isEmphasized: Bool = true
 }
 
-// Usage with custom material
-let panelController = FloatingPanelController(
-    rootView: CustomPanelContent(),
-    material: .popover
-)
-
-// Usage with custom position and size
-let panelController = FloatingPanelController(
-    rootView: CustomPanelContent(),
-    size: WidePanelSize(),
-    position: TopRightPosition(),
-    material: .popover
+// Initialize the controller with the custom effect.
+panelController = FloatingPanelController(
+    rootView: ContentView(),
+    visualEffect: PopoverWindowEffect()
 )
 ```
 
-## API Reference
+### Updating Content
+
+You can dynamically change the view displayed in the panel at any time.
+
+```swift
+func showLoadingState() {
+    let loadingView = ProgressView()
+    panelController?.updateContentView(loadingView)
+}
+```
+
+## API Overview
 
 ### Protocols
 
-#### FloatingPanelPosition
+-   `FloatingPanelPosition`: Requires `func calculatePosition(for panelSize: CGSize) -> CGPoint`.
+-   `FloatingPanelSize`: Requires `var compact: CGSize` and `var expanded: CGSize`.
 
-Protocol for defining panel positions:
+### Main Class: `FloatingPanelController`
 
-```swift
-protocol FloatingPanelPosition {
-    func calculatePosition(for panelSize: CGSize) -> CGPoint
-}
-```
-
-#### FloatingPanelSize
-
-Protocol for defining panel sizes:
-
-```swift
-protocol FloatingPanelSize {
-    var compact: CGSize { get }
-    var expanded: CGSize { get }
-}
-```
-
-### Built-in Configurations
-
-#### Position Configurations
-
-- `DefaultPanelPosition()` - Centers the panel on screen
-- `TopRightPosition()` - Positions in top-right corner
-- `BottomLeftPosition()` - Positions in bottom-left corner
-- `CustomPosition(x:y:)` - Custom coordinates
-
-#### Size Configurations
-
-- `DefaultPanelSize()` - 284x200 → 284x600
-- `WidePanelSize()` - 400x150 → 400x400
-- `TallPanelSize()` - 200x300 → 200x600
-- `CustomPanelSize(compact:expanded:)` - Custom dimensions
-
-### FloatingPanel
-
-The main panel class that creates floating windows.
-
-#### Initialization
-
-```swift
-init<V: View>(
-    rootView: V,
-    size: FloatingPanelSize = DefaultPanelSize(),
-    position: FloatingPanelPosition = DefaultPanelPosition()
-)
-```
-
-#### Methods
-
-- `positionPanel()` - Reposition the panel on screen
-- `toggleSize()` - Toggle between compact and expanded sizes
-- `resizeTo(_:animated:)` - Resize to a specific size
-- `updateContentView(_:)` - Update the panel content
-- `getCurrentSize()` - Get the current panel size
-- `isCompact()` - Check if panel is in compact size
-
-### FloatingPanelController
-
-A controller that manages panel visibility and hotkeys.
-
-#### Initialization
-
-```swift
-init<V: View>(
-    rootView: V,
-    size: FloatingPanelSize = DefaultPanelSize(),
-    position: FloatingPanelPosition = DefaultPanelPosition(),
-    material: NSVisualEffectView.Material = .underWindowBackground
-)
-```
-
-#### Methods
-
-- `setupHotkey(key:modifiers:)` - Setup a hotkey to toggle the panel
-- `showPanel()` - Show the panel
-- `hidePanel()` - Hide the panel
-- `togglePanel()` - Toggle panel visibility
-- `togglePanelSize()` - Toggle panel size
-- `resizeTo(_:animated:)` - Resize the panel
-- `updateContentView(_:material:)` - Update panel content with optional material
-- `getCurrentSize()` - Get the current panel size
-- `isCompact()` - Check if panel is in compact size
-- `isPanelVisible()` - Check if panel is visible
-
-### View Extensions
-
-#### floatingPanelBackground
-
-Apply a visual effect background to any view:
-
-```swift
-Text("Hello")
-    .floatingPanelBackground(material: .popover)
-```
-
-## Examples
-
-### Notification Panel
-
-```swift
-struct NotificationPanel: View {
-    let message: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: "bell.fill")
-                .foregroundStyle(.blue)
-            Text(message)
-                .font(.body)
-        }
-        .padding()
-    }
-}
-
-// Usage
-let notification = NotificationPanel(message: "New message received!")
-let controller = FloatingPanelController(
-    rootView: notification,
-    size: CustomPanelSize(
-        compact: CGSize(width: 300, height: 60),
-        expanded: CGSize(width: 300, height: 120)
-    ),
-    position: TopRightPosition(),
-    material: .hudWindow
-)
-```
-
-### Quick Actions Panel
-
-```swift
-struct QuickActionsPanel: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Quick Actions")
-                .font(.headline)
-            
-            Button("Copy") { /* action */ }
-            Button("Paste") { /* action */ }
-            Button("Cut") { /* action */ }
-        }
-        .padding()
-    }
-}
-```
-
-## Requirements
-
-- macOS 13.0+
-- Xcode 14.0+
-- Swift 5.7+
+-   `init<V: View>(rootView:size:position:visualEffect:)`: Creates the panel.
+-   `setupHotkey(key:modifiers:)`: Registers a global hotkey.
+-   `showPanel()`: Shows the panel.
+-   `hidePanel()`: Hides the panel.
+-   `togglePanel()`: Toggles visibility.
+-   `togglePanelSize()`: Toggles between compact and expanded sizes.
+-   `updateContentView<V: View>(_:visualEffect:)`: Swaps the content view.
 
 ## Dependencies
 
-- [HotKey](https://github.com/soffes/HotKey) - For global hotkey support
-- [VisualEffectView](https://github.com/your-repo/VisualEffectView) - For native macOS visual effects
-
-## License
-
-This project is licensed under the MIT License.
+-   [HotKey](https://github.com/soffes/HotKey): For registering global hotkeys.
+-   [VisualEffectView](https://github.com/euclidaxiom/VisualEffectView): For the native macOS material.

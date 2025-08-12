@@ -3,7 +3,10 @@ import SwiftUI
 import VisualEffectView
 @preconcurrency import HotKey
 
-/// A controller for managing floating panels with hotkey support
+/// Manages the lifecycle and interactions of a `FloatingPanel`.
+///
+/// This is the main class for consumers of the library. It handles panel creation,
+/// visibility, hotkey registration, and content updates.
 @MainActor
 public class FloatingPanelController {
     private var floatingPanel: FloatingPanel?
@@ -11,19 +14,24 @@ public class FloatingPanelController {
     private var escapeEventMonitor: Any?
     private var isVisible: Bool = false
     
-    /// Initialize a new floating panel controller
+    /// Initializes the controller and creates the underlying floating panel.
+    ///
+    /// The `rootView` is automatically styled with a visual effect background and prepared for use in the panel.
+    ///
     /// - Parameters:
-    ///   - rootView: The SwiftUI view to display in the panel
-    ///   - size: The size configuration for the panel
-    ///   - position: The position configuration for the panel
-    ///   - visualEffect: The visual effect material to use for the panel background
+    ///   - rootView: The SwiftUI view to display as the panel's content.
+    ///   - size: A `FloatingPanelSize` object defining the panel's compact and expanded dimensions.
+    ///           Defaults to `DefaultPanelSize`.
+    ///   - position: A `FloatingPanelPosition` object defining the panel's on-screen location.
+    ///               Defaults to `DefaultPanelPosition`.
+    ///   - visualEffect: An optional `VisualEffectConfiguration` for customizing the panel's background.
+    ///                   If `nil`, the `VisualEffectView` library's default is used.
     public init<V: View>(
         rootView: V,
         size: FloatingPanelSize = DefaultPanelSize(),
         position: FloatingPanelPosition = DefaultPanelPosition(),
         visualEffect: VisualEffectConfiguration? = nil
     ) {
-        // Apply the floating panel style automatically
         let styledView = AnyView(
             rootView
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -34,10 +42,10 @@ public class FloatingPanelController {
         floatingPanel = FloatingPanel(rootView: styledView, size: size, position: position)
     }
     
-    /// Setup a hotkey to show/hide the panel
+    /// Registers a global hotkey to toggle the panel's visibility.
     /// - Parameters:
-    ///   - key: The key to use for the hotkey
-    ///   - modifiers: The modifier keys to combine with the main key
+    ///   - key: The `Key` for the hotkey (e.g., `.space`).
+    ///   - modifiers: The modifier flags (e.g., `[.command, .shift]`). Defaults to Command+Shift.
     public func setupHotkey(key: Key, modifiers: NSEvent.ModifierFlags = [.command, .shift]) {
         hotKey = HotKey(key: key, modifiers: modifiers)
         hotKey?.keyDownHandler = { [weak self] in
@@ -47,7 +55,7 @@ public class FloatingPanelController {
         }
     }
     
-    /// Show the panel
+    /// Makes the panel visible on the screen.
     public func showPanel() {
         guard !isVisible else { return }
         
@@ -57,7 +65,7 @@ public class FloatingPanelController {
         isVisible = true
     }
     
-    /// Hide the panel
+    /// Hides the panel.
     public func hidePanel() {
         guard isVisible else { return }
         
@@ -66,7 +74,7 @@ public class FloatingPanelController {
         isVisible = false
     }
     
-    /// Toggle the panel visibility
+    /// Toggles the panel's visibility. If visible, it's hidden, and vice-versa.
     public func togglePanel() {
         if isVisible {
             hidePanel()
@@ -75,29 +83,26 @@ public class FloatingPanelController {
         }
     }
     
-    /// Toggle the panel size between compact and expanded
+    /// Toggles the panel's size between its compact and expanded states.
     public func togglePanelSize() {
         guard isVisible else { return }
-        
         floatingPanel?.toggleSize()
     }
     
-    /// Resize the panel to a specific size
+    /// Resizes the panel to a specific size.
     /// - Parameters:
-    ///   - size: The target size
-    ///   - animated: Whether to animate the resize
+    ///   - size: The target `CGSize`.
+    ///   - animated: If `true`, the resize is animated. Defaults to `true`.
     public func resizeTo(_ size: CGSize, animated: Bool = true) {
         guard isVisible else { return }
-        
         floatingPanel?.resizeTo(size, animated: animated)
     }
     
-    /// Update the content view of the panel
+    /// Updates the panel's content with a new SwiftUI view.
     /// - Parameters:
-    ///   - rootView: The new SwiftUI view to display
-    ///   - material: The visual effect material to use for the panel background
+    ///   - rootView: The new SwiftUI view to display.
+    ///   - visualEffect: An optional `VisualEffectConfiguration` to apply to the new content.
     public func updateContentView<V: View>(_ rootView: V, visualEffect: VisualEffectConfiguration? = nil) {
-        // Apply the floating panel style automatically
         let styledView = AnyView(
             rootView
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -108,33 +113,31 @@ public class FloatingPanelController {
         floatingPanel?.updateContentView(styledView)
     }
     
-    /// Get the current size of the panel
-    /// - Returns: The current panel size
+    /// Returns the panel's current size.
     public func getCurrentSize() -> CGSize? {
         return floatingPanel?.getCurrentSize()
     }
     
-    /// Check if the panel is currently in compact size
-    /// - Returns: True if the panel is in compact size, false otherwise
+    /// Checks if the panel is currently in its compact state.
     public func isCompact() -> Bool? {
         return floatingPanel?.isCompact()
     }
     
-    /// Check if the panel is currently visible
-    /// - Returns: True if the panel is visible, false otherwise
+    /// Checks if the panel is currently visible.
     public func isPanelVisible() -> Bool {
         return isVisible
     }
     
+    /// Registers a local event monitor to hide the panel when the Escape key is pressed.
     private func addEscapeEventMonitor() {
         guard escapeEventMonitor == nil else { return }
         
         escapeEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == 53 { // 53 is the keycode for Escape
+            if event.keyCode == 53 { // Keycode for Escape
                 Task { @MainActor in
                     self?.hidePanel()
                 }
-                return nil
+                return nil // Swallow the event
             }
             return event
         }
@@ -148,8 +151,7 @@ public class FloatingPanelController {
     }
     
     deinit {
-        // Note: removeEscapeEventMonitor() cannot be called from deinit due to MainActor isolation
-        // The monitor will be automatically cleaned up by the system
-        // hotKey will be automatically deallocated
+        // The hotKey and escapeEventMonitor are managed automatically by their respective systems
+        // and will be deallocated correctly.
     }
 }
