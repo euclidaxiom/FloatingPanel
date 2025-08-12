@@ -23,15 +23,15 @@ public struct DefaultPanelPosition: FloatingPanelPosition {
         
         return CGPoint(
             x: screenFrame.midX - panelSize.width / 2,
-            y: screenFrame.midY - panelSize.height / 2
+            y: CGFloat(210)
         )
     }
 }
 
 /// Default panel size configuration
 public struct DefaultPanelSize: FloatingPanelSize {
-    public let compact: CGSize = CGSize(width: 284, height: 200)
-    public let expanded: CGSize = CGSize(width: 284, height: 600)
+    public let compact: CGSize = CGSize(width: 600, height: 64)
+    public let expanded: CGSize = CGSize(width: 600, height: 431)
     
     public init() {}
 }
