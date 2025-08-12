@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/soffes/HotKey.git", from: "0.2.1"),
-        .package(url: "https://github.com/euclidaxiom/VisualEffectView.git", from: "1.0.0"),
+        .package(url: "https://github.com/euclidaxiom/VisualEffectView.git", from: "4.0.0"),
     ],
     targets: [
         .target(

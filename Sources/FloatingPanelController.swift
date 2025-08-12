@@ -16,18 +16,20 @@ public class FloatingPanelController {
     ///   - rootView: The SwiftUI view to display in the panel
     ///   - size: The size configuration for the panel
     ///   - position: The position configuration for the panel
-    ///   - material: The visual effect material to use for the panel background
+    ///   - visualEffect: The visual effect material to use for the panel background
     public init<V: View>(
-        rootView: V, 
+        rootView: V,
         size: FloatingPanelSize = DefaultPanelSize(),
         position: FloatingPanelPosition = DefaultPanelPosition(),
-        material: NSVisualEffectView.Material = .underWindowBackground
+        visualEffect: VisualEffectConfiguration? = nil
     ) {
         // Apply the floating panel style automatically
-        let styledView = AnyView(rootView)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(VisualEffectView(material: material))
-            .ignoresSafeArea()
+        let styledView = AnyView(
+            rootView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(VisualEffectView(config: visualEffect))
+                .ignoresSafeArea()
+        )
         
         floatingPanel = FloatingPanel(rootView: styledView, size: size, position: position)
     }
@@ -94,12 +96,14 @@ public class FloatingPanelController {
     /// - Parameters:
     ///   - rootView: The new SwiftUI view to display
     ///   - material: The visual effect material to use for the panel background
-    public func updateContentView<V: View>(_ rootView: V, material: NSVisualEffectView.Material = .underWindowBackground) {
+    public func updateContentView<V: View>(_ rootView: V, visualEffect: VisualEffectConfiguration? = nil) {
         // Apply the floating panel style automatically
-        let styledView = AnyView(rootView)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(VisualEffectView(material: material))
-            .ignoresSafeArea()
+        let styledView = AnyView(
+            rootView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(VisualEffectView(config: visualEffect))
+                .ignoresSafeArea()
+        )
         
         floatingPanel?.updateContentView(styledView)
     }

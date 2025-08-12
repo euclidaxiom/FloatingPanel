@@ -1,5 +1,5 @@
 {
-  "originHash" : "d2a1f72379b4fc20b5535d2f8779e50da75a4df96f2be25d3adc7083a65108d9",
+  "originHash" : "f4501555dd912a69bb62646353483bbb16b4d8f0e700303a59924c9f449b7c9f",
   "pins" : [
     {
       "identity" : "hotkey",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/euclidaxiom/VisualEffectView.git",
       "state" : {
-        "revision" : "1d2eae4f5b04cd043a50436085a642124ed0004d",
-        "version" : "1.0.0"
+        "revision" : "9e55b9e09b013433531e8918cfdf643e52afcf8f",
+        "version" : "4.0.0"
       }
     }
   ],
