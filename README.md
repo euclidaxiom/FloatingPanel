@@ -107,27 +107,6 @@ panelController = FloatingPanelController(
 )
 ```
 
-### Custom Background Visual Effect
-
-You can customize the background material of the panel by providing a `VisualEffectConfiguration`. This is useful for matching the panel's appearance to your app's design.
-
-```swift
-import VisualEffectView
-
-// A custom visual effect configuration.
-struct PopoverWindowEffect: VisualEffectConfiguration {
-    let material: NSVisualEffectView.Material = .popover
-    let blendingMode: NSVisualEffectView.BlendingMode = .withinWindow
-    let isEmphasized: Bool = true
-}
-
-// Initialize the controller with the custom effect.
-panelController = FloatingPanelController(
-    rootView: ContentView(),
-    visualEffect: PopoverWindowEffect()
-)
-```
-
 ### Updating Content
 
 You can dynamically change the view displayed in the panel at any time.
