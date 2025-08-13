@@ -7,7 +7,5 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .padding()
         }
-//        .ignoresSafeArea()
-//        EmptyView()
     }
 }

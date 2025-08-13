@@ -1,2 +1,0 @@
-- [ ] Configuração de tecla "all" sem o Raycast.
-- [ ] Decidir se o pacote deve ter o HotKey, ou só expor a chamada e o app que deve ter o HotKey.
