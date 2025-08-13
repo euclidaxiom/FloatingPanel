@@ -13,7 +13,6 @@ let package = Package(
             targets: ["FloatingPanel"])
     ],
     dependencies: [
-        .package(url: "https://github.com/soffes/HotKey.git", from: "0.2.1"),
         .package(
             url: "https://github.com/euclidaxiom/VisualEffectView.git",
             branch: "main"
@@ -23,7 +22,6 @@ let package = Package(
         .target(
             name: "FloatingPanel",
             dependencies: [
-                "HotKey",
                 "VisualEffectView"
             ]),
         .executableTarget(

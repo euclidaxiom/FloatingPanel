@@ -5,8 +5,10 @@ struct FloatingPanelDemoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        Settings {
-            EmptyView()
+        MenuBarExtra("FloatingPanel Demo", systemImage: "square.grid.2x2") {
+            Button("Quit") {
+                NSApp.terminate(nil)
+            }
         }
     }
 }

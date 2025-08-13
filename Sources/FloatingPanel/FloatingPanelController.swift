@@ -1,12 +1,10 @@
 import AppKit
 import SwiftUI
 import VisualEffectView
-@preconcurrency import HotKey
 
 @MainActor
 public class FloatingPanelController {
     private var floatingPanel: FloatingPanel?
-    private var hotKey: HotKey?
     private var escapeEventMonitor: Any?
     private var isVisible: Bool = false
     
@@ -27,18 +25,6 @@ public class FloatingPanelController {
             size: size,
             position: position
         )
-    }
-    
-    public func setupHotkey(
-        key: Key,
-        modifiers: NSEvent.ModifierFlags = [.command, .shift]
-    ) {
-        hotKey = HotKey(key: key, modifiers: modifiers)
-        hotKey?.keyDownHandler = { [weak self] in
-            Task { @MainActor in
-                self?.togglePanel()
-            }
-        }
     }
     
     public func showPanel() {

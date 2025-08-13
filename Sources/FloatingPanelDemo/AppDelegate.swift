@@ -10,11 +10,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let contentView = ContentView()
         panelController = FloatingPanelController(rootView: contentView)
-        panelController?
-            .setupHotkey(
-                key: .space,
-                modifiers: [.shift, .control, .option, .command]
-            )
-        panelController?.togglePanel()
+        panelController?.showPanel()
     }
 }
