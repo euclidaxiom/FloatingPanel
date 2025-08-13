@@ -23,30 +23,38 @@ public class FloatingPanelController {
     ///   - size: A `FloatingPanelSize` object defining the panel's compact and expanded dimensions.
     ///           Defaults to `DefaultPanelSize`.
     ///   - position: A `FloatingPanelPosition` object defining the panel's on-screen location.
-    ///               Defaults to `DefaultPanelPosition`.
+    ///             Defaults to `DefaultPanelPosition`.
     ///   - visualEffect: An optional `VisualEffectConfiguration` for customizing the panel's background.
-    ///                   If `nil`, the `VisualEffectView` library's default is used.
+    ///                 If `nil`, the `VisualEffectView` library's default is used.
+    ///   - cornerRadius: An optional `CGFloat` for customizing the panel's corner radius.
+    ///                   If `nil`, a default value of `16` is used.
     public init<V: View>(
         rootView: V,
         size: FloatingPanelSize = DefaultPanelSize(),
         position: FloatingPanelPosition = DefaultPanelPosition(),
-        visualEffect: VisualEffectConfiguration? = nil
+        visualEffect: VisualEffectConfiguration? = nil,
+        cornerRadius: CGFloat? = nil
     ) {
-        let styledView = AnyView(
-            rootView
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(VisualEffectView(config: visualEffect))
-                .ignoresSafeArea()
+        floatingPanel = FloatingPanel(
+            rootView: Self
+                .styledRootView(
+                    rootView,
+                    visualEffect: visualEffect,
+                    cornerRadius: cornerRadius
+                ),
+            size: size,
+            position: position
         )
-        
-        floatingPanel = FloatingPanel(rootView: styledView, size: size, position: position)
     }
     
     /// Registers a global hotkey to toggle the panel's visibility.
     /// - Parameters:
     ///   - key: The `Key` for the hotkey (e.g., `.space`).
     ///   - modifiers: The modifier flags (e.g., `[.command, .shift]`). Defaults to Command+Shift.
-    public func setupHotkey(key: Key, modifiers: NSEvent.ModifierFlags = [.command, .shift]) {
+    public func setupHotkey(
+        key: Key,
+        modifiers: NSEvent.ModifierFlags = [.command, .shift]
+    ) {
         hotKey = HotKey(key: key, modifiers: modifiers)
         hotKey?.keyDownHandler = { [weak self] in
             Task { @MainActor in
@@ -102,15 +110,20 @@ public class FloatingPanelController {
     /// - Parameters:
     ///   - rootView: The new SwiftUI view to display.
     ///   - visualEffect: An optional `VisualEffectConfiguration` to apply to the new content.
-    public func updateContentView<V: View>(_ rootView: V, visualEffect: VisualEffectConfiguration? = nil) {
-        let styledView = AnyView(
-            rootView
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(VisualEffectView(config: visualEffect))
-                .ignoresSafeArea()
+    ///   - cornerRadius: An optional `CGFloat` for customizing the panel's corner radius.
+    ///                   If `nil`, the previous corner radius is maintained.
+    public func updateContentView<V: View>(
+        _ rootView: V,
+        visualEffect: VisualEffectConfiguration? = nil,
+        cornerRadius: CGFloat? = nil
+    ) {
+        floatingPanel?.updateContentView(
+            Self.styledRootView(
+                rootView,
+                visualEffect: visualEffect,
+                cornerRadius: cornerRadius
+            )
         )
-        
-        floatingPanel?.updateContentView(styledView)
     }
     
     /// Returns the panel's current size.
@@ -132,15 +145,16 @@ public class FloatingPanelController {
     private func addEscapeEventMonitor() {
         guard escapeEventMonitor == nil else { return }
         
-        escapeEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == 53 { // Keycode for Escape
-                Task { @MainActor in
-                    self?.hidePanel()
+        escapeEventMonitor = NSEvent
+            .addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                if event.keyCode == 53 { // Keycode for Escape
+                    Task { @MainActor in
+                        self?.hidePanel()
+                    }
+                    return nil // Swallow the event
                 }
-                return nil // Swallow the event
+                return event
             }
-            return event
-        }
     }
     
     private func removeEscapeEventMonitor() {
@@ -153,5 +167,24 @@ public class FloatingPanelController {
     deinit {
         // The hotKey and escapeEventMonitor are managed automatically by their respective systems
         // and will be deallocated correctly.
+    }
+    
+    private static func styledRootView<V: View>(
+        _ rootView: V,
+        visualEffect: VisualEffectConfiguration?,
+        cornerRadius: CGFloat?
+    ) -> AnyView {
+        AnyView(
+            rootView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(VisualEffectView(config: visualEffect))
+                .mask(
+                    RoundedRectangle(
+                        cornerRadius: cornerRadius ?? 16,
+                        style: .continuous
+                    )
+                )
+                .ignoresSafeArea()
+        )
     }
 }
