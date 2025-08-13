@@ -10,18 +10,25 @@ let package = Package(
     products: [
         .library(
             name: "FloatingPanel",
-            targets: ["FloatingPanel"]),
+            targets: ["FloatingPanel"])
     ],
     dependencies: [
         .package(url: "https://github.com/soffes/HotKey.git", from: "0.2.1"),
-        .package(url: "https://github.com/euclidaxiom/VisualEffectView.git", from: "4.0.0"),
+        .package(
+            url: "https://github.com/euclidaxiom/VisualEffectView.git",
+            branch: "main"
+        ),
     ],
     targets: [
         .target(
             name: "FloatingPanel",
             dependencies: [
                 "HotKey",
-                "VisualEffectView",
+                "VisualEffectView"
             ]),
+        .executableTarget(
+            name: "FloatingPanelDemo",
+            dependencies: ["FloatingPanel"],
+        ),
     ]
 )
