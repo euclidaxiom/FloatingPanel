@@ -49,7 +49,7 @@ public class FloatingPanel: NSPanel {
         
         super.init(
             contentRect: .zero,
-            styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView],
+            styleMask: [.nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: true
         )
