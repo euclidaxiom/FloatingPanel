@@ -9,14 +9,6 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Text("Hello, world!")
-                .foregroundStyle(.secondary)
-                .padding()
-            
-            Button("Toggle Size") {
-                panelController?.togglePanelSize()
-            }
-            
             if let panelController {
                 Text("Compact Height: \(panelController.getPanelSize().compact.height)")
                 Text("Expanded Height: \(panelController.getPanelSize().expanded.height)")
@@ -24,4 +16,3 @@ struct ContentView: View {
         }
     }
 }
-
