@@ -125,7 +125,7 @@ public class FloatingPanelController {
                 .background(VisualEffectView(config: visualEffect))
                 .mask(
                     RoundedRectangle(
-                        cornerRadius: cornerRadius ?? 16,
+                        cornerRadius: cornerRadius ?? 52 / 2,
                         style: .continuous
                     )
                 )

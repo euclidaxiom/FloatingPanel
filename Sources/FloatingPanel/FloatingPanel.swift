@@ -25,7 +25,7 @@ public struct DefaultPanelPosition: FloatingPanelPosition {
 }
 
 public struct DefaultPanelSize: FloatingPanelSize {
-    public let compact: CGSize = CGSize(width: 600, height: 57)
+    public let compact: CGSize = CGSize(width: 600, height: 52)
     public let expanded: CGSize = CGSize(width: 600, height: 431)
     
     public init() {}
