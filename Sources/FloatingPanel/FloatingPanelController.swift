@@ -8,24 +8,46 @@ public class FloatingPanelController {
     private var escapeEventMonitor: Any?
     private var isVisible: Bool = false
     private let panelSize: FloatingPanelSize
-    
+
     public init<V: View>(
+        size: FloatingPanelSize = DefaultPanelSize(),
+        position: FloatingPanelPosition = DefaultPanelPosition(),
+        visualEffect: VisualEffectConfiguration? = nil,
+        cornerRadius: CGFloat? = nil,
+        @ViewBuilder content: (FloatingPanelController) -> V
+    ) {
+        self.panelSize = size
+            
+        let rootView = content(self)
+            
+        self.floatingPanel = FloatingPanel(
+            rootView: Self
+                .styledRootView(
+                    rootView,
+                    for: self,
+                    visualEffect: visualEffect,
+                    cornerRadius: cornerRadius
+                ),
+            size: size,
+            position: position
+        )
+    }
+
+    public convenience init<V: View>(
         rootView: V,
         size: FloatingPanelSize = DefaultPanelSize(),
         position: FloatingPanelPosition = DefaultPanelPosition(),
         visualEffect: VisualEffectConfiguration? = nil,
         cornerRadius: CGFloat? = nil
     ) {
-        self.panelSize = size
-        floatingPanel = FloatingPanel(
-            rootView: Self
-                .styledRootView(
-                    rootView,
-                    visualEffect: visualEffect,
-                    cornerRadius: cornerRadius
-                ),
+        self.init(
             size: size,
-            position: position
+            position: position,
+            visualEffect: visualEffect,
+            cornerRadius: cornerRadius,
+            content: {
+                _ in rootView
+            }
         )
     }
     
@@ -75,7 +97,7 @@ public class FloatingPanelController {
     ) {
         floatingPanel?.updateContentView(
             Self.styledRootView(
-                rootView,
+                rootView, for: self,
                 visualEffect: visualEffect,
                 cornerRadius: cornerRadius
             )
@@ -99,11 +121,11 @@ public class FloatingPanelController {
         
         escapeEventMonitor = NSEvent
             .addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                if event.keyCode == 53 { // Keycode for Escape
+                if event.keyCode == 53 {
                     Task { @MainActor in
                         self?.hidePanel()
                     }
-                    return nil // Swallow the event
+                    return nil
                 }
                 return event
             }
@@ -122,11 +144,13 @@ public class FloatingPanelController {
     
     private static func styledRootView<V: View>(
         _ rootView: V,
+        for controller: FloatingPanelController,
         visualEffect: VisualEffectConfiguration?,
         cornerRadius: CGFloat?
     ) -> AnyView {
         AnyView(
             rootView
+                .environment(\.panelController, controller)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(VisualEffectView(config: visualEffect))
                 .mask(
@@ -137,5 +161,16 @@ public class FloatingPanelController {
                 )
                 .ignoresSafeArea()
         )
+    }
+}
+
+public struct PanelControllerKey: EnvironmentKey {
+    public static let defaultValue: FloatingPanelController? = nil
+}
+
+public extension EnvironmentValues {
+    var panelController: FloatingPanelController? {
+        get { self[PanelControllerKey.self] }
+        set { self[PanelControllerKey.self] = newValue }
     }
 }
