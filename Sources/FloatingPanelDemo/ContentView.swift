@@ -1,14 +1,27 @@
 import SwiftUI
 import FloatingPanel
 
+import SwiftUI
+import FloatingPanel
+
 struct ContentView: View {
-    var panelController: FloatingPanelController?
+    @Environment(\.panelController) private var panelController
 
     var body: some View {
         VStack {
             Text("Hello, world!")
                 .foregroundStyle(.secondary)
                 .padding()
+            
+            Button("Toggle Size") {
+                panelController?.togglePanelSize()
+            }
+            
+            if let panelController {
+                Text("Compact Height: \(panelController.getPanelSize().compact.height)")
+                Text("Expanded Height: \(panelController.getPanelSize().expanded.height)")
+            }
         }
     }
 }
+

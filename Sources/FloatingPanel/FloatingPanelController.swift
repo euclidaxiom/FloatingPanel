@@ -7,6 +7,7 @@ public class FloatingPanelController {
     private var floatingPanel: FloatingPanel?
     private var escapeEventMonitor: Any?
     private var isVisible: Bool = false
+    private let panelSize: FloatingPanelSize
     
     public init<V: View>(
         rootView: V,
@@ -15,6 +16,7 @@ public class FloatingPanelController {
         visualEffect: VisualEffectConfiguration? = nil,
         cornerRadius: CGFloat? = nil
     ) {
+        self.panelSize = size
         floatingPanel = FloatingPanel(
             rootView: Self
                 .styledRootView(
@@ -25,6 +27,10 @@ public class FloatingPanelController {
             size: size,
             position: position
         )
+    }
+    
+    public func getPanelSize() -> FloatingPanelSize {
+        return panelSize
     }
     
     public func showPanel() {
