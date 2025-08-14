@@ -61,6 +61,10 @@ public class FloatingPanel: NSPanel {
         positionPanel()
     }
     
+    override public var canBecomeKey: Bool {
+        return true
+    }
+    
     private func configurePanel() {
         backgroundColor = .clear
         isOpaque = false
