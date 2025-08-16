@@ -55,6 +55,30 @@ public class FloatingPanelController {
         return panelSize
     }
     
+    private var clickOutsideMonitor: Any?
+
+    private func addClickOutsideMonitor() {
+        clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self, let panel = self.floatingPanel else { return }
+            
+            let clickLocation = NSEvent.mouseLocation
+            let panelFrame = panel.frame
+            
+            if !panelFrame.contains(clickLocation) {
+                DispatchQueue.main.async {
+                    self.hidePanel()
+                }
+            }
+        }
+    }
+
+    private func removeClickOutsideMonitor() {
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
+        }
+    }
+    
     public func showPanel() {
         guard !isVisible else { return }
         
@@ -73,6 +97,7 @@ public class FloatingPanelController {
         }
         
         addEscapeEventMonitor()
+        addClickOutsideMonitor()
         
         isVisible = true
     }
@@ -81,7 +106,10 @@ public class FloatingPanelController {
         guard isVisible else { return }
         
         floatingPanel?.close()
+        
         removeEscapeEventMonitor()
+        removeClickOutsideMonitor()
+        
         isVisible = false
     }
     

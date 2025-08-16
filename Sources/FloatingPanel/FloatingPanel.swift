@@ -70,7 +70,6 @@ public class FloatingPanel: NSPanel {
         titleVisibility = .hidden
         
         becomesKeyOnlyIfNeeded = false
-//        hidesOnDeactivate = false   // Verificar o que é a aplicação se tornar inativa
         
         collectionBehavior = [.canJoinAllSpaces, .stationary]
     }
@@ -107,7 +106,6 @@ public class FloatingPanel: NSPanel {
                 .y - (
                     size.height - currentFrame.height
                 ),
-            // Anchor resize to the top
             width: size.width,
             height: size.height
         )
