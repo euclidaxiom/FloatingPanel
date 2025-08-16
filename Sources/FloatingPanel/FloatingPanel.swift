@@ -115,7 +115,7 @@ public class FloatingPanel: NSPanel {
         if animated {
             NSAnimationContext.runAnimationGroup(
                 { context in
-                    context.duration = 0.1
+                    context.duration = 0.2
                     context.timingFunction = CAMediaTimingFunction(
                         name: .easeInEaseOut
                     )
