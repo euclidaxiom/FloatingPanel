@@ -61,10 +61,6 @@ public class FloatingPanel: NSPanel {
         positionPanel()
     }
     
-    override public var canBecomeKey: Bool {
-        return true
-    }
-    
     private func configurePanel() {
         backgroundColor = .clear
         isOpaque = false
@@ -77,6 +73,14 @@ public class FloatingPanel: NSPanel {
 //        hidesOnDeactivate = false   // Verificar o que é a aplicação se tornar inativa
         
         collectionBehavior = [.canJoinAllSpaces, .stationary]
+    }
+    
+    override public var canBecomeKey: Bool {
+        return true
+    }
+
+    override public func makeKey() {
+        super.makeKey()
     }
     
     private func addContentView<V: View>(rootView: V) {
