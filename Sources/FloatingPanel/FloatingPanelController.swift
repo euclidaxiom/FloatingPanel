@@ -99,6 +99,8 @@ public class FloatingPanelController {
         addEscapeEventMonitor()
         addClickOutsideMonitor()
         
+        NotificationCenter.default.post(name: .panelDidShow, object: nil)
+        
         isVisible = true
     }
     
@@ -109,6 +111,8 @@ public class FloatingPanelController {
         
         removeEscapeEventMonitor()
         removeClickOutsideMonitor()
+        
+        NotificationCenter.default.post(name: .panelDidHide, object: nil)
         
         isVisible = false
     }
@@ -214,4 +218,9 @@ public extension EnvironmentValues {
         get { self[PanelControllerKey.self] }
         set { self[PanelControllerKey.self] = newValue }
     }
+}
+
+extension Notification.Name {
+    static let panelDidShow = Notification.Name("panelDidShow")
+    static let panelDidHide = Notification.Name("panelDidHide")
 }
