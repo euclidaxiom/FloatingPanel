@@ -49,7 +49,7 @@ public class FloatingPanel: NSPanel {
         
         super.init(
             contentRect: .zero,
-            styleMask: [.nonactivatingPanel, .fullSizeContentView],
+            styleMask: [.fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -72,6 +72,9 @@ public class FloatingPanel: NSPanel {
         level = .floating
         titlebarAppearsTransparent = true
         titleVisibility = .hidden
+        
+        becomesKeyOnlyIfNeeded = false
+//        hidesOnDeactivate = false   // Verificar o que é a aplicação se tornar inativa
         
         collectionBehavior = [.canJoinAllSpaces, .stationary]
     }

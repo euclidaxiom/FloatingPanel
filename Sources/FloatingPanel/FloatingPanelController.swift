@@ -59,8 +59,12 @@ public class FloatingPanelController {
         guard !isVisible else { return }
         
         floatingPanel?.positionPanel()
-        floatingPanel?.makeKeyAndOrderFront(nil)
+        
+        floatingPanel?.orderFrontRegardless()
+        floatingPanel?.makeKey()
+        
         addEscapeEventMonitor()
+        
         isVisible = true
     }
     
