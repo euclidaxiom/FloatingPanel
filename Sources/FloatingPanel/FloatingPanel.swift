@@ -51,7 +51,7 @@ public class FloatingPanel: NSPanel {
             contentRect: .zero,
             styleMask: [.nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
-            defer: true
+            defer: false
         )
         
         setContentSize(currentSize)
