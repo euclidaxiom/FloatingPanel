@@ -220,7 +220,7 @@ public extension EnvironmentValues {
     }
 }
 
-extension Notification.Name {
+public extension Notification.Name {
     static let panelDidShow = Notification.Name("panelDidShow")
     static let panelDidHide = Notification.Name("panelDidHide")
 }
