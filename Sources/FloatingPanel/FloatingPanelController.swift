@@ -60,8 +60,17 @@ public class FloatingPanelController {
         
         floatingPanel?.positionPanel()
         
-        floatingPanel?.orderFrontRegardless()
-        floatingPanel?.makeKey()
+        floatingPanel?.orderFront(nil)
+            
+        DispatchQueue.main.async {
+            self.floatingPanel?.makeKey()
+                
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                if !(self.floatingPanel?.isKeyWindow ?? false) {
+                    self.floatingPanel?.makeKey()
+                }
+            }
+        }
         
         addEscapeEventMonitor()
         
